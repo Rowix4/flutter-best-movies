@@ -1,9 +1,15 @@
 import 'package:flutter/material.dart';
+
+import 'package:movie_app/components/movieDetail/GenresWrap.dart';
+import 'package:movie_app/components/movieDetail/InformationRow.dart';
+import 'package:movie_app/components/movieDetail/CastingContainer.dart';
+import 'package:movie_app/components/movieDetail/TextContainer.dart';
+
 import 'package:movie_app/model/Movie.dart';
+import 'package:movie_app/model/People.dart';
+
 import 'package:movie_app/repository/MovieRepository.dart';
 import 'package:movie_app/repository/PeopleRepository.dart';
-
-import 'model/People.dart';
 
 class MovieDetail extends StatefulWidget {
   MovieDetail({Key key, this.movie}) : super(key: key);
@@ -76,88 +82,11 @@ class _MovieDetailState extends State<MovieDetail> {
                       return Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Row(children: [
-                            Padding(padding: const EdgeInsets.fromLTRB(10, 10, 10, 10)),
-                            Column(
-                                children: [
-                                  Padding(padding: const EdgeInsets.only(right: 30)),
-                                  Text('15+', style: new TextStyle(color: Colors.white, fontSize: 14)),
-                                ]
-                            ),
-                            separator(),
-                            Column(
-                              children: [
-                                Padding(padding: const EdgeInsets.only(right: 30)),
-                                Text(movie.releaseDate.substring(0,4) ?? '', style: new TextStyle(color: Colors.white, fontSize: 14)),
-                              ],
-                            ),
-                            separator(),
-                            Column(
-                              children: [
-                                Row(children: [
-                                  Icon(Icons.star, color: Colors.yellow),
-                                  Text(' ' + movie.rate ?? '0', style: new TextStyle(color: Colors.white, fontSize: 14)),
-                                ])
-                              ],
-                            ),
-                          ]),
-                          Wrap(
-                            children: <Widget>[
-                              for(var genre in movie.genres ) Container(
-                                child: Padding(
-                                  padding: const EdgeInsets.fromLTRB(10, 10, 10, 10),
-                                  child: Text(
-                                    genre['name'],
-                                    style: TextStyle(
-                                        fontSize: 15.0,
-                                        fontWeight: FontWeight.bold,
-                                        color: Colors.black),
-                                  ),
-                                ),
-                                margin: const EdgeInsets.fromLTRB(15, 15, 0, 0),
-                                decoration: BoxDecoration(
-                                    color: Colors.white,
-                                    borderRadius: BorderRadius.circular(8.0)),
-                              ),
-                            ],
-                          ),
-                          Container(child: Padding(
-                              padding: const EdgeInsets.fromLTRB(20, 25, 10, 10),
-                              child: Wrap(
-                                children: [
-                                  Text('Casting : ', style: TextStyle(fontWeight: FontWeight.bold, color: Colors.white)),
-                                  FutureBuilder<List<People>>(
-                                    future: peoples,
-                                    builder: (context, snapshot) {
-                                      if (snapshot.hasData) {
-                                        return Wrap(
-                                          children: snapshot.data.map((e) => Text(e.name + ', ', style: TextStyle(color: Colors.white))).toList()
-                                        );
-                                      } else if (snapshot.hasError) {
-                                        print("${snapshot.error}");
-                                      }
-
-                                      // By default, show a loading spinner.
-                                      return Center(child: CircularProgressIndicator());
-                                    },
-                                  ),
-                                ],
-                              )
-                          )),
-                          Container(child: Padding(
-                              padding: const EdgeInsets.fromLTRB(20, 10, 10, 10),
-                              child: Text(
-                                  "Sommaire",
-                                  style: TextStyle(fontWeight: FontWeight.bold, color: Colors.white)
-                              )
-                          )),
-                          Container(child: Padding(
-                              padding: const EdgeInsets.fromLTRB(20, 10, 20, 20),
-                              child: Text(
-                                movie.overview ?? '',
-                                style: TextStyle(color: Colors.white), textAlign: TextAlign.justify,
-                              )
-                          )),
+                          InformationRow(movie: movie),
+                          GenreWrap(movie: movie),
+                          CastingContainer(peoples: peoples),
+                          TextContainer(text: "Sommaire"),
+                          TextContainer(text: movie.overview, isBold: false,)
                         ],
                       );
                     } else if (snapshot.hasError) {
@@ -175,13 +104,5 @@ class _MovieDetailState extends State<MovieDetail> {
     );
   }
 
-  Widget separator()
-  {
-    return Column(
-      children: [
-        Padding(padding: const EdgeInsets.only(right: 30)),
-        Text('-', style: new TextStyle(color: Colors.white, fontSize: 14)),
-      ],
-    );
-  }
+
 }

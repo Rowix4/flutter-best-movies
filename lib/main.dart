@@ -82,12 +82,6 @@ class _MyHomePageState extends State<MyHomePage> {
     super.initState();
   }
 
-  Future<void> _sendLogLogin() async {
-    await analytics.logEvent(
-      name: 'loginEvent',
-    );
-  }
-
   final _formKey = GlobalKey<FormState>();
 
   @override
@@ -219,7 +213,7 @@ class _MyHomePageState extends State<MyHomePage> {
                                   password: password
                               );
 
-                              _sendLogLogin();
+                              await analytics.logLogin();
 
                               Navigator.push(
                                 context,

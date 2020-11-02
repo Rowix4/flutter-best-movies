@@ -4,7 +4,7 @@ import 'package:firebase_analytics/observer.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 
-import 'HomePage.dart';
+import 'screens/HomePage.dart';
 
 void main() {
   runApp(MyApp());

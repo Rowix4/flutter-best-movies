@@ -8,7 +8,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 
-import 'package:movie_app/MovieList.dart';
+import 'package:movie_app/screens/MovieList.dart';
 import 'package:movie_app/components/home/CredentialsErrorPopup.dart';
 import 'package:movie_app/components/home/LoginTextField.dart';
 

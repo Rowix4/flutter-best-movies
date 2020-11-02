@@ -2,6 +2,7 @@ import 'package:email_validator/email_validator.dart';
 
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:flutter/cupertino.dart';
 
 import 'package:flutter/material.dart';
 
@@ -37,7 +38,11 @@ class _MyHomePageState extends State<MyHomePage> {
   // Set default `_initialized` and `_error` state to false
   bool _initialized = false;
   bool _error = false;
-  FirebaseAuth auth = FirebaseAuth.instance;
+
+  FirebaseAuth auth;
+
+  String email;
+  String password;
 
   // Define an async function to initialize FlutterFire
   void initializeFlutterFire() async {
@@ -45,6 +50,7 @@ class _MyHomePageState extends State<MyHomePage> {
       // Wait for Firebase to initialize and set `_initialized` state to true
       await Firebase.initializeApp();
       setState(() {
+        auth = FirebaseAuth.instance;
         _initialized = true;
       });
     } catch(e) {
@@ -57,27 +63,17 @@ class _MyHomePageState extends State<MyHomePage> {
 
   @override
   void initState() {
-    super.initState();
-
     initializeFlutterFire();
-
-    FirebaseAuth.instance
-        .authStateChanges()
-        .listen((User user) {
-      if (user == null) {
-        print('User is currently signed out!');
-      } else {
-        print('User is signed in!');
-      }
-    });
+    super.initState();
   }
 
   final _formKey = GlobalKey<FormState>();
 
   @override
   Widget build(BuildContext context) {
+    // Show error message if initialization failed
     if(_error) {
-      return Text('Error when initializing Firebase');
+      return Text('Erreur de la connexion à la base de donnée');
     }
 
     // Show a loader until FlutterFire is initialized
@@ -101,7 +97,7 @@ class _MyHomePageState extends State<MyHomePage> {
                 const DecoratedBox(
                   decoration: BoxDecoration(
                     gradient: LinearGradient(
-                      begin: Alignment(0.0, 0.9),
+                      begin: Alignment(0.0, 0.65),
                       end: Alignment(0.0, 0.0),
                       colors: <Color>[
                         Colors.black,
@@ -143,7 +139,16 @@ class _MyHomePageState extends State<MyHomePage> {
                               ),
                             ),
                             keyboardType: TextInputType.emailAddress,
-                            validator: (value) => EmailValidator.validate(value) ? null : "Veuillez entrer une adresse mail valide.",
+                            validator: (value) {
+                              var validator = EmailValidator.validate(value);
+
+                              if (validator == null)
+                                return "Veuillez entrer une adresse mail valide.";
+
+                              email = value;
+
+                              return null;
+                            }
                           ),
                           Padding(padding: const EdgeInsets.fromLTRB(0, 10, 0, 0)),
                           TextFormField(
@@ -174,9 +179,7 @@ class _MyHomePageState extends State<MyHomePage> {
                                 return 'Veuillez entrer votre mot de passe.';
                               }
 
-                              if(value.length < 8) {
-                                return 'Votre mot de passe doit faire au moins 8 caractères.';
-                              }
+                              password = value;
 
                               return null;
                             },
@@ -185,14 +188,47 @@ class _MyHomePageState extends State<MyHomePage> {
                       ),
                     ),
                     Padding(
-                      padding: const EdgeInsets.symmetric(vertical: 16.0),
+                      padding: const EdgeInsets.symmetric(vertical: 5.0),
                       child: ElevatedButton(
-                        onPressed: () {
+                        onPressed: () async {
                           if (_formKey.currentState.validate()) {
-                            Navigator.push(
-                              context,
-                              MaterialPageRoute(builder: (context) => MovieList()),
-                            );
+                            try {
+                              await FirebaseAuth.instance.signInWithEmailAndPassword(
+                                  email: email,
+                                  password: password
+                              );
+
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(builder: (context) => MovieList()),
+                              );
+                            } on FirebaseAuthException catch (e) {
+                              return showDialog<void>(
+                                context: context,
+                                barrierDismissible: false, // user must tap button!
+                                builder: (BuildContext context) {
+                                  return CupertinoAlertDialog(
+                                    title: Text('Erreur'),
+                                    content: SingleChildScrollView(
+                                      child: ListBody(
+                                        children: <Widget>[
+                                          Padding(padding: const EdgeInsets.fromLTRB(0, 10, 0, 0)),
+                                          Text('Email ou mot de passe incorrect'),
+                                        ],
+                                      ),
+                                    ),
+                                    actions: <Widget>[
+                                      CupertinoDialogAction(
+                                        child: Text('Ok'),
+                                        onPressed: () {
+                                          Navigator.of(context).pop();
+                                        },
+                                      ),
+                                    ],
+                                  );
+                                },
+                              );
+                            }
                           }
                         },
                         child: Text('Valider'),

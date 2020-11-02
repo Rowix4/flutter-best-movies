@@ -1,9 +1,11 @@
 import 'package:email_validator/email_validator.dart';
 
+import 'package:firebase_analytics/firebase_analytics.dart';
+import 'package:firebase_analytics/observer.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:flutter/cupertino.dart';
 
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 
 import 'package:movie_app/MovieList.dart';
@@ -13,6 +15,9 @@ void main() {
 }
 
 class MyApp extends StatelessWidget {
+  static FirebaseAnalytics analytics = FirebaseAnalytics();
+  static FirebaseAnalyticsObserver observer = FirebaseAnalyticsObserver(analytics: analytics);
+
   // This widget is the root of your application.
   @override
   Widget build(BuildContext context) {
@@ -22,24 +27,34 @@ class MyApp extends StatelessWidget {
         primarySwatch: Colors.blue,
         visualDensity: VisualDensity.adaptivePlatformDensity,
       ),
-      home: MyHomePage(),
+      navigatorObservers: [
+        FirebaseAnalyticsObserver(analytics: analytics),
+      ],
+      home: MyHomePage(analytics: analytics, observer: observer),
     );
   }
 }
 
 class MyHomePage extends StatefulWidget {
-  MyHomePage({Key key}) : super(key: key);
+  MyHomePage({Key key, this.analytics, this.observer}) : super(key: key);
+
+  final FirebaseAnalytics analytics;
+  final FirebaseAnalyticsObserver observer;
 
   @override
-  _MyHomePageState createState() => _MyHomePageState();
+  _MyHomePageState createState() => _MyHomePageState(analytics, observer);
 }
 
 class _MyHomePageState extends State<MyHomePage> {
+  _MyHomePageState(this.analytics, this.observer);
   // Set default `_initialized` and `_error` state to false
   bool _initialized = false;
   bool _error = false;
 
   FirebaseAuth auth;
+
+  final FirebaseAnalyticsObserver observer;
+  final FirebaseAnalytics analytics;
 
   String email;
   String password;
@@ -65,6 +80,12 @@ class _MyHomePageState extends State<MyHomePage> {
   void initState() {
     initializeFlutterFire();
     super.initState();
+  }
+
+  Future<void> _sendLogLogin() async {
+    await analytics.logEvent(
+      name: 'loginEvent',
+    );
   }
 
   final _formKey = GlobalKey<FormState>();
@@ -198,6 +219,8 @@ class _MyHomePageState extends State<MyHomePage> {
                                   password: password
                               );
 
+                              _sendLogLogin();
+
                               Navigator.push(
                                 context,
                                 MaterialPageRoute(builder: (context) => MovieList()),
@@ -241,69 +264,4 @@ class _MyHomePageState extends State<MyHomePage> {
       ),
     );
   }
-
-  Future login() {
-
-  }
 }
-
-// TODO : Do same than TmdbFormField for my form fields
-/*
-class TmdbFormField extends StatelessWidget {
-  final TextEditingController controller;
-  final FocusNode focusNode;
-  final String hintText;
-  final Function validator;
-  final bool isPassword;
-  final bool isEmail;
-
-  TmdbFormField({
-    this.controller,
-    this.focusNode,
-    this.hintText,
-    this.validator,
-    this.isPassword = false,
-    this.isEmail = false,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return TextFormField(
-      controller: controller,
-      focusNode: focusNode,
-      decoration: InputDecoration(
-          focusColor: Colors.white,
-          hoverColor: Colors.white,
-          hintText: hintText,
-          contentPadding: const EdgeInsets.all(20.0),
-          enabledBorder: OutlineInputBorder(
-            borderSide: BorderSide(
-              color: Colors.white30,
-            ),
-            borderRadius: BorderRadius.circular(0),
-          ),
-          disabledBorder: InputBorder.none,
-          errorBorder: InputBorder.none,
-          focusedBorder: OutlineInputBorder(
-            borderSide: BorderSide(
-              color: Colors.white30,
-            ),
-            borderRadius: BorderRadius.circular(0),
-          ),
-          focusedErrorBorder: InputBorder.none,
-          filled: true,
-          fillColor: Colors.white24,
-          // fillColor: Color(0xff3d3e40),
-          suffixIcon:
-          isPassword ? Icon(Icons.remove_red_eye_sharp) : Container()
-        // fillColor: Colors.grey[200],
-      ),
-      obscureText: isPassword ? true : false,
-      validator: validator,
-      onSaved: (String value) => value.trim(),
-      keyboardType: isEmail ? TextInputType.emailAddress : TextInputType.text,
-      cursorColor: Colors.white,
-      style: TextStyle(color: Colors.white),
-    );
-  }
-}*/
